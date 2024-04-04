@@ -4,6 +4,10 @@
 //./term/parse.rs//
 //./term/compile.rs//
 //./sugar/mod.rs//
+//./sugar/parse.rs//
+//./sugar/desugar.rs//
+//./sugar/resugar.rs//
+//./sugar/show.rs
 //./show/mod.rs//
 //./info/mod.rs//
 //./info/parse.rs//
