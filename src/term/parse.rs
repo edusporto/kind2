@@ -509,9 +509,28 @@ impl<'i> KindParser<'i> {
       });
     }
 
+    // Pair/new
+    if self.starts_with(",") {
+      self.consume(",")?;
+      let ini = *self.index() as u64;
+      let fst = Box::new(term);
+      let snd = Box::new(self.parse_term(fid, uses)?);
+      let end = *self.index() as u64;
+      let src = Src::new(fid, ini, end);
+      return Ok(Term::Src {
+        src,
+        val: Box::new(Term::App {
+          era: false,
+          fun: Box::new(Term::App {
+            era: false,
+            fun: Box::new(Term::Var { nam: "Pair/new".to_string() }),
+            arg: fst,
+          }),
+          arg: snd,
+        }),
+      });
+    }
+
     return Ok(term);
   }
-
-
-
 }

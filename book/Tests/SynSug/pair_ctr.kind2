@@ -1,0 +1,4 @@
+// Tests the syntax sugar for pairs.
+// `Pair/new x y == (x, y)`
+
+pair_ctr : (Pair Bool (Pair Nat Unit)) = (Bool/true, (Nat/zero, Unit/new))
