@@ -1,51 +1,96 @@
 module MatchExperiment where
 
+import Data.List (sort)
+import qualified Data.List.NonEmpty as L
+
+-- | ADT Constructor
 data Ctr = Ctr String [Ctr]
   deriving (Show, Eq, Ord)
 
--- transform :: Ctr -> LList String
--- transform (Ctr name []) = name :. End
--- transform (Ctr name xs) = _
+-- | Pattern match case
+data Cse = Cse String [Cse]
+  deriving (Show, Eq, Ord)
 
 {-
 
 match x {
-  (pair nil nil)
-  (pair cons nil)
-  (pair nil cons)
-  (pair cons cons)
+  (pair (unit nil) nil): _1
+  (pair (unit cons) nil): _2
+  (pair (unit nil) cons): _3
+  (pair (unit cons) cons): _4
 }
 
 =>
 
 [
-  (pair, [(nil, []), (nil, [])]),
-  (pair, [(cons, []), (nil, [])]),
-  (pair, [(nil, []), (cons, [])]),
-  (pair, [(cons, []), (cons, [])])
+  Ctr "pair" [Ctr "unit" [Ctr "nil" []], Ctr "nil" []],
+  Ctr "pair" [Ctr "unit" [Ctr "cons" []], Ctr "nil" []],
+  Ctr "pair" [Ctr "unit" [Ctr "nil" []], Ctr "cons" []],
+  Ctr "pair" [Ctr "unit" [Ctr "cons" []], Ctr "cons" []]
 ]
 
-=> (ordena)
+=> (sort)
 
 [
-  (pair, [(nil, []), (nil, [])]),
-  (pair, [(nil, []), (cons, [])]),
-  (pair, [(cons, []), (nil, [])]),
-  (pair, [(cons, []), (cons, [])])
+  Ctr "pair" [Ctr "unit" [Ctr "nil" []], Ctr "nil" []],
+  Ctr "pair" [Ctr "unit" [Ctr "nil" []], Ctr "cons" []],
+  Ctr "pair" [Ctr "unit" [Ctr "cons" []], Ctr "nil" []],
+  Ctr "pair" [Ctr "unit" [Ctr "cons" []], Ctr "cons" []]
+]
+
+=> (group)
+
+[
+  Cse "pair"
+    [Cse "unit"
+      [Cse "nil" 
+        [Cse "nil" [],
+         Cse "cons" [],
+      [Cse "cons"
+        [Cse "nil" [],
+         Cse "cons" []]]]]]
 ]
 
 =>
 
-[
-  match x {
-    pair: match x.fst {
-      
+match x {
+  pair: match x.fst {
+    unit: match x.fst.val {
+      nil: match x.snd {
+        nil: _1
+        cons: _3
+      }
+      cons: match x.snd {
+        nil: _2
+        cons: _4
+      }
     }
   }
-]
+}
 
 -}
 
+-- | Joins multiple constructors into a case.
+-- Assumes all constructors have the same name.
+joinCtr :: L.NonEmpty Ctr -> Cse
+joinCtr ctrs@(c L.:| cs) = 
+    let (Ctr name args) = c
+     in Cse name (map joinCtr (groupCtrs args))
+
+groupCtrs :: [Ctr] -> [L.NonEmpty Ctr]
+groupCtrs = L.groupBy (\(Ctr n1 _) (Ctr n2 _) -> n1 == n2)
+
+ctrList =
+  [ Ctr "pair" [Ctr "nil" [], Ctr "nil" []],
+    Ctr "pair" [Ctr "cons" [], Ctr "nil" []],
+    Ctr "pair" [Ctr "nil" [], Ctr "cons" []],
+    Ctr "pair" [Ctr "cons" [], Ctr "cons" []]
+  ]
+
+sCtrList = sort ctrList
+
+-- >>> map joinCtr $ groupCtrs sCtrList
+-- [Cse "pair" [Cse "cons" []]]
 
 -- For testing
 
