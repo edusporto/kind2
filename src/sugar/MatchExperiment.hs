@@ -1,7 +1,8 @@
 module MatchExperiment where
 
 import Data.List (sort)
-import qualified Data.List.NonEmpty as L
+import Data.List.NonEmpty (NonEmpty (..))
+import Data.List.NonEmpty qualified as L
 
 -- | ADT Constructor
 data Ctr = Ctr String [Ctr]
@@ -40,16 +41,14 @@ match x {
 
 => (group)
 
-[
-  Cse "pair"
-    [Cse "unit"
-      [Cse "nil" 
-        [Cse "nil" [],
-         Cse "cons" [],
-      [Cse "cons"
-        [Cse "nil" [],
-         Cse "cons" []]]]]]
-]
+[Cse "pair"
+  [Cse "unit"
+    [Cse "nil"
+      [Cse "nil" [],
+       Cse "cons" []],
+     Cse "cons"
+      [Cse "nil" [],
+       Cse "cons" []]]]]
 
 =>
 
@@ -70,27 +69,82 @@ match x {
 
 -}
 
--- | Joins multiple constructors into a case.
--- Assumes all constructors have the same name.
-joinCtr :: L.NonEmpty Ctr -> Cse
-joinCtr ctrs@(c L.:| cs) = 
-    let (Ctr name args) = c
-     in Cse name (map joinCtr (groupCtrs args))
+-- Strategy: Ctr -> Cse, merge Cses
 
-groupCtrs :: [Ctr] -> [L.NonEmpty Ctr]
-groupCtrs = L.groupBy (\(Ctr n1 _) (Ctr n2 _) -> n1 == n2)
+mergeCses :: [Cse] -> [Cse]
+mergeCses = foldl f []
+  where
+    f [] cse = [cse]
+    f ((Cse n1 a1) : xs) (Cse n2 a2) =
+      if n1 == n2
+        then Cse n1 (mergeCses (a1 ++ a2)) : xs
+        else Cse n2 a2 : Cse n1 a1 : xs
+
+-- mergeCse :: Cse -> Cse -> [Cse]
+-- mergeCse c1@(Cse n1 a1) c2@(Cse n2 a2) =
+--   if n1 == n2
+--     then [Cse n1 (zipWith (_ . mergeCse) a1 a2)]
+--     else [c1, c2]
 
 ctrList =
   [ Ctr "pair" [Ctr "nil" [], Ctr "nil" []],
-    Ctr "pair" [Ctr "cons" [], Ctr "nil" []],
     Ctr "pair" [Ctr "nil" [], Ctr "cons" []],
+    Ctr "pair" [Ctr "cons" [], Ctr "nil" []],
     Ctr "pair" [Ctr "cons" [], Ctr "cons" []]
   ]
 
+cseList =
+  [ Cse
+      "pair"
+      [ Cse
+          "nil"
+          [ Cse "nil" [],
+            Cse "cons" []
+          ],
+        Cse
+          "cons"
+          [ Cse "nil" [],
+            Cse "cons" []
+          ]
+      ]
+  ]
+
+-- ctrList =
+--   [ Ctr "pair" [Ctr "unit" [Ctr "nil" []], Ctr "nil" []],
+--     Ctr "pair" [Ctr "unit" [Ctr "nil" []], Ctr "cons" []],
+--     Ctr "pair" [Ctr "unit" [Ctr "cons" []], Ctr "nil" []],
+--     Ctr "pair" [Ctr "unit" [Ctr "cons" []], Ctr "cons" []]
+--   ]
+
+-- cseList =
+--   [ Cse
+--       "pair"
+--       [ Cse
+--           "unit"
+--           [ Cse
+--               "nil"
+--               [ Cse "nil" [],
+--                 Cse "cons" []
+--               ],
+--             Cse
+--               "cons"
+--               [ Cse "nil" [],
+--                 Cse "cons" []
+--               ]
+--           ]
+--       ]
+--   ]
+
 sCtrList = sort ctrList
 
--- >>> map joinCtr $ groupCtrs sCtrList
--- [Cse "pair" [Cse "cons" []]]
+-- >>> groupCtrs sCtrList
+x =
+  [ Ctr "pair" [Ctr "unit" [Ctr "cons" []], Ctr "cons" []]
+      :| [ Ctr "pair" [Ctr "unit" [Ctr "cons" []], Ctr "nil" []],
+           Ctr "pair" [Ctr "unit" [Ctr "nil" []], Ctr "cons" []],
+           Ctr "pair" [Ctr "unit" [Ctr "nil" []], Ctr "nil" []]
+         ]
+  ]
 
 -- For testing
 
@@ -102,6 +156,34 @@ data T2 = C | D
 
 ------------------------------------------------------
 -- Thinking canvas
+
+-- == Failed attempt 2: group ==
+
+-- | Joins multiple constructors into a case.
+-- Assumes all constructors have the same name.
+-- joinCtr :: [NonEmpty Ctr] -> [Cse]
+-- joinCtr [] = []
+-- joinCtr ((ctr :| ctrs) : groups) =
+--   let (Ctr name _) = ctr
+--       args = getArgs (ctr : ctrs)
+--    in _
+--   where
+--     getArgs :: [Ctr] -> [[Ctr]]
+--     getArgs = foldr (\(Ctr _ args) ctrs -> args : ctrs) []
+
+-- joinCtr :: L.NonEmpty Ctr -> Cse
+-- joinCtr ctrs@(c :| cs) =
+--   let (Ctr name args) = c
+--    in Cse name (map joinCtr (groupCtrs args))
+--   where
+--     getArgs :: [Ctr] -> [[Ctr]]
+--     getArgs = foldr (\(Ctr _ args) cs -> args : cs) []
+
+-- groupCtrs :: [Ctr] -> [L.NonEmpty Ctr]
+-- groupCtrs = L.groupBy (\(Ctr n1 _) (Ctr n2 _) -> n1 == n2)
+
+
+-- == Failed attempt 1: LList ==
 
 -- | List of lists with increasingly large dimensions.
 --
