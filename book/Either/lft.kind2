@@ -1,0 +1,2 @@
+lft <A> <B> (val: A) : (Either A B) = 
+ ~λP λlft λrgt (lft val)

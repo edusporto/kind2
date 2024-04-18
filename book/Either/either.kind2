@@ -1,0 +1,8 @@
+use Either/{lft,rgt}
+
+// Performs case analysis on the Either type and applies the appropriate function.
+either <A> <B> <C> (doLft: ∀(a: A) C) (doRgt: ∀(b: B) C) (e: (Either A B)) : C =
+  match e {
+    lft: (doLft e.val)
+    rgt: (doRgt e.val)
+  }

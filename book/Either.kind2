@@ -1,0 +1,3 @@
+data Either A B
+| lft (val: A)
+| rgt (val: B)
