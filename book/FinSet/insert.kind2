@@ -1,0 +1,5 @@
+// Inserts `val` into the finite set.
+insert <V> (cmp: ∀(a: V) ∀(b: V) Cmp) (val: V) (finset: (FinSet V)) : (FinSet V) =
+  match finset {
+    FinSet/new: (FinSet/new (BBT/set cmp val Unit/new finset.tree))
+  }

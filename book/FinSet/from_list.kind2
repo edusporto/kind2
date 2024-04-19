@@ -1,0 +1,7 @@
+use FinSet/insert
+
+from_list <V> (cmp: ∀(a: V) ∀(b: V) Cmp) (list: (List V)) : (FinSet V) =
+  match list {
+    List/cons: (insert cmp list.head (from_list cmp list.tail))
+    List/nil: (FinSet/empty)
+  }

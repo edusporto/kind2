@@ -1,0 +1,2 @@
+new <V> (bbt: (BBT V Unit)) : (FinSet V) = 
+ ~λP λnew (new bbt)

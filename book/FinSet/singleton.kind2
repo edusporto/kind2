@@ -1,0 +1,2 @@
+singleton <V> (val: V) : (FinSet V) =
+  (FinSet/new (BBT/singleton val Unit/new))
